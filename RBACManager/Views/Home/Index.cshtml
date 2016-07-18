@@ -1,0 +1,55 @@
+﻿
+@{
+    ViewBag.Title = "Home Page";
+}
+
+
+<div class="jumbotron">
+    <h1>Role Based Access Control Manager for Azure Resources</h1>
+    <p class="lead"></p>
+</div>
+
+<div ng-app="rbacApp" class="container">    
+    <form class="form-horizontal" ng-controller="RbacController as rbac">
+        <div class="row">
+            <div class="col-md-3">
+                <h3>Select Resource Group</h3>
+                <select ng-model="rbac.roleAssignmentData.ResourceGroup"
+                        ng-options="resourceGroup as resourceGroup.name for resourceGroup in rbac.ResourceGroups track by resourceGroup.id"
+                        ng-change="rbac.getResources()"
+                        class="form-control"
+                        ng-required="true"
+                        id="resource">
+                    <option value="">-- Select Resource Group--</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <h3>Select Resource</h3>
+                <select ng-model="rbac.roleAssignmentData.Resource"
+                        ng-options="resource as resource.name for resource in rbac.Resources track by resource.id"
+                        class="form-control"
+                        ng-required="true"
+                        id="resource">
+                    <option value="">-- Select Resource --</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <h3>Select Role</h3>
+                <select ng-model="rbac.roleAssignmentData.Role"                      
+                        class="form-control"
+                        ng-required="true"
+                        id="role">
+                    <option value="">-- Select Role --</option>
+                    <option ng-repeat="role in rbac.Roles" value="{{ role.id}}" title="{{ role.properties.description }}" >{{ role.properties.roleName}}</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <h3>User's Principal ID</h3>
+                <input type="text" ng-model="rbac.roleAssignmentData.principalId" ng-required="true" class="form-control" />
+            </div>
+        </div>
+        <div class="row">
+            <button class="btn btn-success" style="float:right;margin:10px;" ng-click="rbac.assignRole()">  Assign  </button>
+        </div>
+    </form>
+</div>
