@@ -6,7 +6,7 @@
 
 <div class="jumbotron">
     <h1>Role Based Access Control Manager for Azure Resources</h1>
-    <p class="lead"></p>
+    <p class="lead">@ViewBag.DisplayName</p>
 </div>
 
 <div ng-app="rbacApp" class="container">    
@@ -44,9 +44,24 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <h3>User's Principal ID</h3>
-                <input type="text" ng-model="rbac.roleAssignmentData.principalId" ng-required="true" class="form-control" />
+                <h3>User</h3>
+            
+                <input type="text" 
+                       ng-model="demoModel" 
+                       placeholder="Type user name" 
+                       uib-typeahead="user as user.Name for user in rbac.getUsers($viewValue)" 
+                       typeahead-loading="loading" 
+                       typeahead-no-results="noResults" 
+                       typeahead-min-length="3"
+                       class="form-control">
+                        
+                <i ng-show="loading" class="glyphicon glyphicon-refresh"></i>
+                <div ng-show="noResults">
+                    <i class="glyphicon glyphicon-remove"></i> No Results Found
+                </div>
+
             </div>
+           
         </div>
         <div class="row">
             <button class="btn btn-success" style="float:right;margin:10px;" ng-click="rbac.assignRole()">  Assign  </button>

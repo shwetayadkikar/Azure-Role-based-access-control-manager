@@ -13,6 +13,7 @@ namespace RBACManager
 {
     public class AzureResourceManager
     {
+        string AzureResourceMangementResourceId = ConfigurationManager.AppSettings["AzureResourceMangementAPIUrl"];
 
         public string SubscriptionId
         {
@@ -37,7 +38,7 @@ namespace RBACManager
                 {
                     string token = (Task.Run(async () =>
                      {
-                         var authContext = await AzureAuthenticationManager.GetAccessTokenAsync();
+                         var authContext = await AzureAuthenticationManager.GetAccessTokenAsync(AzureResourceMangementResourceId);
                          return authContext.AccessToken;
                      })).Result;
                     HttpContext.Current.Cache["AccessToken"] = token;

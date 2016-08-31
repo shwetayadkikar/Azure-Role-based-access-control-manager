@@ -6,63 +6,76 @@ using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.Google;
 using Owin;
 using RBACManager.Models;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.Owin.Security.OpenIdConnect;
+using System.Security.Cryptography.X509Certificates;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using System.Web;
+using System.Threading.Tasks;
+using Microsoft.Owin.Security;
+using System.Configuration;
+using System.Globalization;
+using RBACManager.Services;
 
 namespace RBACManager
 {
     public partial class Startup
     {
         // For more information on configuring authentication, please visit http://go.microsoft.com/fwlink/?LinkId=301864
+        private static string clientId = ConfigurationManager.AppSettings["ClientId"];
+        private static string appKey = ConfigurationManager.AppSettings["ClientSecret"];
+        private static string aadInstance = ConfigurationManager.AppSettings["AADInstance"];
+        private static string tenant = ConfigurationManager.AppSettings["Tenant"];
+        private static string postLogoutRedirectUri = ConfigurationManager.AppSettings["PostLogoutRedirectUri"];
+
+        public static readonly string Authority = String.Format(CultureInfo.InvariantCulture, aadInstance, tenant);
+
+        // This is the resource ID of the AAD Graph API.  We'll need this to request a token to call the Graph API.
+        string graphResourceId = ConfigurationManager.AppSettings["GraphUrl"];
+
         public void ConfigureAuth(IAppBuilder app)
         {
-            // Configure the db context, user manager and signin manager to use a single instance per request
-            app.CreatePerOwinContext(ApplicationDbContext.Create);
-            app.CreatePerOwinContext<ApplicationUserManager>(ApplicationUserManager.Create);
-            app.CreatePerOwinContext<ApplicationSignInManager>(ApplicationSignInManager.Create);
+            app.SetDefaultSignInAsAuthenticationType(CookieAuthenticationDefaults.AuthenticationType);
 
-            // Enable the application to use a cookie to store information for the signed in user
-            // and to use a cookie to temporarily store information about a user logging in with a third party login provider
-            // Configure the sign in cookie
-            app.UseCookieAuthentication(new CookieAuthenticationOptions
-            {
-                AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,
-                LoginPath = new PathString("/Account/Login"),
-                Provider = new CookieAuthenticationProvider
+            app.UseCookieAuthentication(new CookieAuthenticationOptions());
+
+            app.UseOpenIdConnectAuthentication(
+                new OpenIdConnectAuthenticationOptions
                 {
-                    // Enables the application to validate the security stamp when the user logs in.
-                    // This is a security feature which is used when you change a password or add an external login to your account.  
-                    OnValidateIdentity = SecurityStampValidator.OnValidateIdentity<ApplicationUserManager, ApplicationUser>(
-                        validateInterval: TimeSpan.FromMinutes(30),
-                        regenerateIdentity: (manager, user) => user.GenerateUserIdentityAsync(manager))
-                }
-            });            
-            app.UseExternalSignInCookie(DefaultAuthenticationTypes.ExternalCookie);
 
-            // Enables the application to temporarily store user information when they are verifying the second factor in the two-factor authentication process.
-            app.UseTwoFactorSignInCookie(DefaultAuthenticationTypes.TwoFactorCookie, TimeSpan.FromMinutes(5));
+                    ClientId = clientId,
+                    Authority = Authority,
+                    PostLogoutRedirectUri = postLogoutRedirectUri,
 
-            // Enables the application to remember the second login verification factor such as phone or email.
-            // Once you check this option, your second step of verification during the login process will be remembered on the device where you logged in from.
-            // This is similar to the RememberMe option when you log in.
-            app.UseTwoFactorRememberBrowserCookie(DefaultAuthenticationTypes.TwoFactorRememberBrowserCookie);
+                    Notifications = new OpenIdConnectAuthenticationNotifications()
+                    {
+                        //
+                        // If there is a code in the OpenID Connect response, redeem it for an access token and refresh token, and store those away.
+                        //
 
-            // Uncomment the following lines to enable logging in with third party login providers
-            //app.UseMicrosoftAccountAuthentication(
-            //    clientId: "",
-            //    clientSecret: "");
+                        AuthorizationCodeReceived = (context) =>
+                        {
+                            var code = context.Code;
 
-            //app.UseTwitterAuthentication(
-            //   consumerKey: "",
-            //   consumerSecret: "");
+                            // Create a Client Credential Using an Application Key
+                            ClientCredential credential = new ClientCredential(clientId, appKey);
+                            //string userObjectID = context.AuthenticationTicket.Identity.FindFirst(
+                            //    "http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
+                            AuthenticationContext authContext = new AuthenticationContext(Authority);
+                            var uri = new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path));
+                            Task.Run(async () =>
+                            {
+                                AuthenticationResult result = await authContext.AcquireTokenByAuthorizationCodeAsync(
+                                    code, uri, credential, graphResourceId);
+                                AzureGraphAPIHelper.AccessToken = result.AccessToken;
+                            }).Wait();
+                            return Task.FromResult(0);
+                        }
 
-            //app.UseFacebookAuthentication(
-            //   appId: "",
-            //   appSecret: "");
+                    }
 
-            //app.UseGoogleAuthentication(new GoogleOAuth2AuthenticationOptions()
-            //{
-            //    ClientId = "",
-            //    ClientSecret = ""
-            //});
+                });
         }
+
     }
 }

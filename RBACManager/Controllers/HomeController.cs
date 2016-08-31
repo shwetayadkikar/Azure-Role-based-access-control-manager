@@ -1,4 +1,9 @@
-﻿using RBACManager.Models;
+﻿using Microsoft.Azure.ActiveDirectory.GraphClient;
+using Microsoft.Azure.ActiveDirectory.GraphClient.Extensions;
+using Microsoft.Owin.Security.OpenIdConnect;
+using RBACManager.Filter;
+using RBACManager.Models;
+using RBACManager.Services;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -9,6 +14,7 @@ using System.Web.Mvc;
 
 namespace RBACManager.Controllers
 {
+    [ActiveDirectoryAuthorization]
     public class HomeController : Controller
     {
         AzureResourceManager _azureResourceManager;
@@ -19,8 +25,8 @@ namespace RBACManager.Controllers
         }
 
         public ActionResult Index()
-        {
-        
+        {        
+         
             return View();
         }
 

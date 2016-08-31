@@ -12,7 +12,7 @@ namespace RBACManager
     {
 
 
-        public static async Task<AuthenticationResult> GetAccessTokenAsync()
+        public static async Task<AuthenticationResult> GetAccessTokenAsync(string resource = "https://management.azure.com/")
         {
             string clientId = ConfigurationManager.AppSettings["ClientId"];
             string clientSecret = ConfigurationManager.AppSettings["ClientSecret"];
@@ -24,9 +24,9 @@ namespace RBACManager
 
             var credential = new ClientCredential(clientId, clientSecret);
 
-            var token = await authContext.AcquireTokenAsync("https://management.azure.com/", credential);
+            var token = await authContext.AcquireTokenAsync(resource, credential);
 
-            Console.WriteLine($"Token: {token.AccessToken}");
+            
             return token;
         }
     }
