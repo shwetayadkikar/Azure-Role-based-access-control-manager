@@ -9,7 +9,7 @@ function RbacController($scope, ResourceService, RoleService, RoleAssignmentServ
     self.getResources = getResources;
     self.assignRole = assignRole;
     self.getUsers = getUsers;
-    self.states = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana'];
+
 
     var resourceGroupsPromise = ResourceService.getResourceGroups();
     resourceGroupsPromise.then(function (response) { console.log(response); self.ResourceGroups = response.data; }, function (error) { console.log(error); });
@@ -39,9 +39,22 @@ function RbacController($scope, ResourceService, RoleService, RoleAssignmentServ
         data.resourceName = self.roleAssignmentData.Resource.name;
         data.roleAssignment = {};
         data.roleAssignment.roleDefinitionId = self.roleAssignmentData.Role;
-        data.roleAssignment.principalId = self.roleAssignmentData.principalId;
+        data.roleAssignment.principalId = self.roleAssignmentData.User.Id;
         var promise = RoleAssignmentService.assignRole(data);
-        promise.then(function (response) { console.log(response); }, function (error) { console.log(error); });
+        promise.then(function (response) {
+            toastr.success("Successfully assigned the role");
+            console.log(response);
+            self.roleAssignmentData.Resource = null;
+            self.roleAssignmentData.Role = null;
+            self.roleAssignmentData.User = null;
+        },
+            function (error) {
+                toastr.success("Error occurred while assigning the role");
+                console.log(error);
+                self.roleAssignmentData.Resource = null;
+                self.roleAssignmentData.Role = null;
+                self.roleAssignmentData.User = null;
+            });
     }
 
     function getResources() {

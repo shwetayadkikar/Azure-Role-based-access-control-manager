@@ -102,7 +102,7 @@ namespace RBACManager
         {
             RoleAssignmentContent roleAssignmentContent = new RoleAssignmentContent();
             roleAssignmentContent.properties = roleAssignment;
-            var roleassignmentid = new Guid();
+            var roleassignmentid = Guid.NewGuid();
             var response = await _client.PutAsJsonAsync($"/subscriptions/{SubscriptionId}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resourceName}/providers/Microsoft.Authorization/roleAssignments/{roleassignmentid.ToString()}?api-version=2015-07-01", roleAssignmentContent);
 
             var jsonResponse = await response.Content.ReadAsStringAsync();

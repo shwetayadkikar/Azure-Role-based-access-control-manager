@@ -47,7 +47,7 @@
                 <h3>User</h3>
             
                 <input type="text" 
-                       ng-model="demoModel" 
+                       ng-model="rbac.roleAssignmentData.User" 
                        placeholder="Type user name" 
                        uib-typeahead="user as user.Name for user in rbac.getUsers($viewValue)" 
                        typeahead-loading="loading" 
